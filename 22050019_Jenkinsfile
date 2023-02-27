@@ -60,6 +60,8 @@ pipeline {
                 """
             }
         }
+        }
+        }
         
         stage('S5_22050019') {
             steps {
