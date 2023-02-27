@@ -24,16 +24,16 @@ pipeline {
 
     stages {
         
-        stage('Cleanup Workspace') {
+        stage('S1_22050019') {
             steps {
                 cleanWs()
                 sh """
-                echo "Cleaned Up Workspace for ${APP_NAME}"
+                echo "S1_22050019: Environment Preparation Completed"
                 """
             }
         }
 
-        stage('Code Checkout') {
+        stage('S2_22050019') {
             steps {
                 checkout([
                     $class: 'GitSCM', 
@@ -42,20 +42,41 @@ pipeline {
                 ])
             }
         }
-
-        stage('Code Build') {
-            steps {
-                 sh 'mvn install -Dmaven.test.skip=true'
-            }
-        }
-
-        stage('Printing All Global Variables') {
-            steps {
+         stage('API and DAST') {
+         
+            parallel {
+            
+                stage('S3_22050019'){
+                    steps{
                 sh """
-                env
+                echo "S3_22050019: API Test Completed"
                 """
             }
         }
+                stage('S4_22050019'){
+                    steps{
+                sh """
+                echo "S4_22050019: DAST Security Test Completed"
+                """
+            }
+        }
+        
+        stage('S5_22050019') {
+            steps {
+                sh """
+                echo "S4_22050019: DAST Security Test Completed"
+                """
+            }
+        }
+
+        stage('S6_22050019') {
+            steps {
+                sh """
+                echo "Work Released - 22050019"
+                """
+            }
+        }
+        
 
     }   
 }
