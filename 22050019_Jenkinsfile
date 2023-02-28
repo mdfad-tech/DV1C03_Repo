@@ -35,50 +35,88 @@ pipeline {
 
         stage('S2_22050019') {
             steps {
-                checkout([
-                    $class: 'GitSCM', 
-                    branches: [[name: '*/main']], 
-                    userRemoteConfigs: [[url: 'https://github.com/spring-projects/spring-petclinic.git']]
-                ])
+                script {
+                    def serverName = 'S2_22050019_Server'
+                    def imageName = '22050019_webimage'
+                    def port = 42000
+                    
+                    // stop and remove existing container
+                    sh "docker stop ${serverName} || true"
+                    sh "docker rm ${serverName} || true"
+                    
+                    // create new container
+                    sh "docker run -d --name ${serverName} -p ${port}:80 ${imageName}"
+                    
+                    echo "S2_22050019: Web Server Creation Completed"
+                }
             }
         }
-         stage('API and DAST') {
+
+        stage('API and DAST') {
          
             parallel {
             
                 stage('S3_22050019'){
                     steps{
-                sh """
-                echo "S3_22050019: API Test Completed"
-                """
-            }
-        }
+                        sh """
+                        echo "S3_22050019: API Test Completed"
+                        """
+                    }
+                }
+
                 stage('S4_22050019'){
                     steps{
-                sh """
-                echo "S4_22050019: DAST Security Test Completed"
-                """
+                        sh """
+                        echo "S4_22050019: DAST Security Test Completed"
+                        """
+                    }
+                }
             }
-        }
-        }
         }
         
         stage('S5_22050019') {
             steps {
-                sh """
-                echo "S4_22050019: DAST Security Test Completed"
-                """
+                script {
+                    def userInput = input(
+                        message: 'Do you want to release the work?',
+                        ok: 'Yes',
+                        parameters: [
+                            string(defaultValue: 'No', description: 'Type "Yes" to proceed', name: 'confirmation')
+                        ]
+                    )
+                    if (userInput != 'Yes') {
+                        error('Aborted by user')
+                    }
+                }
             }
         }
 
         stage('S6_22050019') {
             steps {
-                sh """
-                echo "Work Released - 22050019"
-                """
+                script {
+                    def s5Result = currentBuild.getBuildCauses('hudson.model.Cause$UpstreamCause').find {
+                        it.getShortDescription().startsWith('Started by user')
+                    }
+                    if (s5Result != null) {
+                        def userInput = input(
+                            message: 'Do you want to release the work?',
+                            ok: 'Yes',
+                            parameters: [
+                                string(defaultValue: 'No', description: 'Type "Yes" to proceed', name: 'confirmation')
+                            ]
+                        )
+                        if (userInput != 'Yes') {
+                            error('Aborted by user')
+                        }
+                        sh """
+                        echo "Work Released - 22050019"
+                        """
+                    } else {
+                        echo 'Skipping S6_22050019: S5_22050019 did not run'
+                    }
+                }
             }
         }
-        
 
     }   
 }
